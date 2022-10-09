@@ -7,6 +7,7 @@ OptionDialog::OptionDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
+    move((1366-this->width())/2,(768-this->height())/2);
     // this->setCursor(Qt::BlankCursor); //去掉光标
 }
 

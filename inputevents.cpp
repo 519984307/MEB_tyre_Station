@@ -1,12 +1,15 @@
 ﻿#include "inputevents.h"
 #include "GlobalVarible.h"
 #include <QDebug>
+#include "qfile.h"
 InputEvents::InputEvents(QObject *parent) :
     QObject(parent)
 {
     numcount = 0;
     issingle = false;
     keyvalue = 0;
+    count = 0;
+    firstFlag = true;
     this->moveToThread(&m_thread);
     m_thread.start();
 
@@ -14,6 +17,7 @@ InputEvents::InputEvents(QObject *parent) :
 
 void InputEvents::InputEventStart()
 {
+    qDebug()<<"InputEventStart";
     connect(&m_timer,SIGNAL(timeout()),this,SLOT(mtimerarrve3()));
     const char *dev_name;
     dev_name = "/dev/input/event0";
@@ -34,8 +38,43 @@ void InputEvents::InputEventStart()
     m_timer.start(100);
 }
 
+
+//钥匙盒信号
 void InputEvents::mtimerarrve3()
 {
+    int result = 0;
+    QFile IO_File_Path11("/root/gpio/IN0");
+    IO_File_Path11.open(QIODevice::ReadOnly);
+    QTextStream in11(&IO_File_Path11);
+    in11 >> result;
+    IO_File_Path11.close();
+    if(result==1)
+    {
+        count++;
+        if(count > 10  && firstFlag)
+        {
+            count = 0;
+            firstFlag = false;
+            system("echo 1 > /root/gpio/OUT0 &");
+            GBoltOkNum = 0;
+            GBoltAllNum = 0;
+            qDebug()<<"carPass";
+            emit sendconfigwarning(false);//发给主窗口处理钥匙跳过螺栓
+//            emit sendTighteningResult1(3,1);
+//            emit sendconfigwarning(true);//nok one bolt
+        }/*else{//不做单步跳了
+            GBoltOkNum = 0;
+            GBoltAllNum = 0;
+            emit sendTighteningResult1(3,1);
+            emit sendconfigwarning(true);//nok one bolt
+        }*/
+    }
+    else
+    {
+        count = 0;
+        firstFlag = true;
+        system("echo 0 > /root/gpio/OUT0 &");
+    }
     if(!ISWARNING)
     {
         if(read(keys_fd,&t,sizeof(t))==sizeof(t))
@@ -50,30 +89,34 @@ void InputEvents::mtimerarrve3()
 
                         if(t.value == 1)
                         {
-                            numcount++;
-                            if(numcount == 20)
+                            if(DebugMode)
                             {
-                                emit sendconfigwarning(false);
-                                numcount = 0;
+                                system("echo 1 > /sys/class/leds/OUTC4/brightness");
                             }
-
+                            else
+                            {
+                                numcount++;
+                                if(numcount == 20)
+                                {
+                                    numcount = 0;
+                                    emit sendconfigwarning(false);//nok all bolt
+                                }
+                            }
                         }
                         else if(t.value == 0)
                         {
-                            numcount = 0;
-                            emit sendconfigwarning(true);
+                            if(DebugMode)
+                            {
+                                system("echo 0 > /sys/class/leds/OUTC4/brightness");
+                            }
+                            else
+                            {
+                                numcount = 0;
+                                qDebug()<<"sendconfigwarning";
+                                emit sendconfigwarning(true);//nok one bolt
+                            }
                         }
                         break;
-
-                    case 115:   //电池
-                        if(!battery)
-                        {
-                            if(t.value == 0)
-                                emit sendbatterysta(true);
-                            else
-                                emit sendbatterysta(false);
-                            break;
-                        }
                     case 116:
                         break;
                     default:
@@ -88,8 +131,7 @@ void InputEvents::mtimerarrve3()
                 numcount++;
                 if(numcount == 20)
                 {
-                    if(SYSS == "ING")
-                        emit sendconfigwarning(false);
+                    emit sendconfigwarning(false);//nok all bolt
                     numcount = 0;
                     keyvalue = 0;
                 }

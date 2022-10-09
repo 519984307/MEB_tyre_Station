@@ -18,6 +18,7 @@ public:
 signals:
     void sendconfigwarning(bool);
     void sendbatterysta(bool);
+    void sendTighteningResult1(int,int);
 public slots:
     void InputEventStart();
     void mtimerarrve3();
@@ -30,6 +31,8 @@ private:
     int keys_fd;
     int numcount;
     int keyvalue;
+    int count;
+    bool firstFlag;
     
 };
 

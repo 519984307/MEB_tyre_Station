@@ -107,7 +107,6 @@ public slots:
 
 private slots:
     void updatePosition(QWidget *widget);
-
 };
 
 #endif //  KeyBoard_H

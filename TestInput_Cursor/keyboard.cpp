@@ -253,9 +253,9 @@ void KeyBoard::connectMapper()
 
     for (QToolButton **btn = buttons.numCharBegin(); btn < buttons.numCharEnd(); btn++)
     {
-        connect(*btn, SIGNAL(pressed()), _signalPressedMapper, SLOT(map()));
+//        connect(*btn, SIGNAL(pressed()), _signalPressedMapper, SLOT(map()));
         connect(*btn, SIGNAL(clicked()), signalMapper, SLOT(map()));
-        connect(*btn, SIGNAL(released()), _signalReleaseMapper, SLOT(map()));
+//        connect(*btn, SIGNAL(released()), _signalReleaseMapper, SLOT(map()));
     }
     connect(buttons.space(), SIGNAL(clicked()), signalMapper, SLOT(map()));
 }
@@ -545,3 +545,4 @@ void KeyBoard::generateBackSpaceChar()
     QKeyEvent delPress(QEvent::KeyPress, Qt::Key_Backspace, Qt::NoModifier);
     sendKeyEvent(&delPress);
 }
+
